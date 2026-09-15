@@ -28,9 +28,8 @@ with every step around it removed: copy, run `clippush`, paste.
 
 ### 📫 Reach me
 
-Open an issue on any of my repos — that's the fastest way to get me.
+Questions about a public project? Open an issue in that repository.
 
 ---
 
-<sub>🗂️ Most of what I build lives in private repos, so the list above is a
-thin slice. The contribution graph below is the fuller picture.</sub>
+<sub>🗂️ This profile highlights the work I share publicly.</sub>
