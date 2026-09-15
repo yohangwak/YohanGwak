@@ -21,9 +21,11 @@ to support it.
 
 ## Working here
 
-- **No build, no test suite, no package manager.** The repo is Markdown only —
-  there is nothing to install or compile, and nothing to run before committing.
-- **No CI runs on pull requests.** Nothing verifies a change for you.
+- **No application build, automated test suite, or package manager.** Before
+  committing, run the relevant manual checks below for the files you changed.
+- **The repository workflow does not run on pushes or pull requests.** It is
+  manual-only (`workflow_dispatch`). A PR may still show an external Pullfrog
+  review check; treat that separately from application verification.
 - **`.github/workflows/pullfrog.yml` is vendor-managed** (`DO NOT EDIT EXCEPT
   WHERE INDICATED`). It only triggers on `workflow_dispatch`, so it never fires
   on push or PR. Leave it alone unless the task is specifically about it.
@@ -46,21 +48,40 @@ Anything committed here is visible to everyone who opens the profile. So:
 
 ### Verifying a change
 
-Render is the only thing that can break, so check the parts that fetch:
+Check only what the change affects. For `README.md`, verify the parts that
+fetch:
 
 ```bash
 # every badge/image returns 200, and its logo slug actually resolved
-for u in $(grep -o 'https://img.shields.io[^)]*' README.md); do
-  curl -s -o /tmp/b.svg -w '%{http_code} ' "$u"
-  echo "logo=$(grep -c 'data:image' /tmp/b.svg)  $u"
-done
+badge_probe="$(mktemp -t yohangwak-badge.XXXXXX)"
+trap 'unlink "$badge_probe"' EXIT
+while IFS= read -r u; do
+  if code="$(curl --silent --show-error --location --connect-timeout 5 \
+      --max-time 20 --output "$badge_probe" --write-out '%{http_code}' "$u")"; then
+    printf '%s logo=%s  %s\n' "$code" \
+      "$(grep -c 'data:image' "$badge_probe")" "$u"
+  else
+    printf '%s logo=not-checked  %s\n' "${code:-curl-error}" "$u"
+  fi
+done < <(grep -o 'https://img.shields.io[^)]*' README.md)
 # want: 200 logo=1 for each. logo=0 means the slug is wrong — the badge
 # renders, but with no icon, which is easy to miss by eye.
 
 # every link resolves
-for u in $(grep -oE 'https://[^)" ]+' README.md); do
-  echo "$(curl -s -o /dev/null -w '%{http_code}' "$u")  $u"
-done
+while IFS= read -r u; do
+  code="$(curl --silent --show-error --location --connect-timeout 5 \
+    --max-time 20 --output /dev/null --write-out '%{http_code}' "$u")" || \
+    code="${code:-curl-error}"
+  printf '%s  %s\n' "$code" "$u"
+done < <(grep -oE 'https://[^)" ]+' README.md)
+```
+
+If `AGENTS.md` or `CLAUDE.md` changed, also confirm that Git records
+`AGENTS.md` with mode `120000` and the exact target `CLAUDE.md`:
+
+```bash
+git ls-files -s AGENTS.md CLAUDE.md
+git cat-file -p :AGENTS.md
 ```
 
 Then open <https://github.com/yohangwak> after merging and look at it once —
