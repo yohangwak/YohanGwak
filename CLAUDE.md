@@ -16,7 +16,7 @@ to support it.
 ├── AGENTS.md → CLAUDE.md
 └── .github/
     └── workflows/
-        └── pullfrog.yml         # manual (workflow_dispatch) agent runner
+        └── pullfrog.yml         # manual (workflow_dispatch) agent runner — disabled
 ```
 
 ## Working here
@@ -24,8 +24,11 @@ to support it.
 - **No application build, automated test suite, or package manager.** Before
   committing, run the relevant manual checks below for the files you changed.
 - **The repository workflow does not run on pushes or pull requests.** It is
-  manual-only (`workflow_dispatch`). A PR may still show an external Pullfrog
-  review check; treat that separately from application verification.
+  manual-only (`workflow_dispatch`), and it is currently **disabled** in the
+  repository's Actions settings (since 2026-09-12, after its only run failed at
+  the agent step), so it cannot be dispatched until someone re-enables it. A PR
+  may still show an external Pullfrog review check; treat that separately from
+  application verification.
 - **`.github/workflows/pullfrog.yml` is vendor-managed** (`DO NOT EDIT EXCEPT
   WHERE INDICATED`). It only triggers on `workflow_dispatch`, so it never fires
   on push or PR. Leave it alone unless the task is specifically about it.
